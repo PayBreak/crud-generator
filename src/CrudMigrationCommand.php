@@ -73,22 +73,79 @@ class CrudMigrationCommand extends GeneratorCommand
             $array = explode(':', $field);
             $data[$x]['name'] = trim($array[0]);
             $data[$x]['type'] = trim($array[1]);
+            $data[$x]['config'] = (isset($array[2])) ? $array[2] : null ;
             $x++;
         }
 
         $schemaFields = '';
         foreach ($data as $item) {
-            if ($item['type'] == 'string') {
-                $schemaFields .= "\$table->string('" . $item['name'] . "');";
-            } elseif ($item['type'] == 'text') {
-                $schemaFields .= "\$table->text('" . $item['name'] . "');";
-            } elseif ($item['type'] == 'integer') {
-                $schemaFields .= "\$table->integer('" . $item['name'] . "');";
-            } elseif ($item['type'] == 'date') {
-                $schemaFields .= "\$table->date('" . $item['name'] . "');";
-            } else {
-                $schemaFields .= "\$table->string('" . $item['name'] . "');";
+
+            /*
+             * Allow user to make field name as an array
+             * Allows such migration values like $table->double('column', 15, 8);
+             */
+            if (substr($item['name'], 0, 1) == '|') {
+                $options = explode('|', $item['name']);
+                unset($options[0]);
+                array_pop($options);
+                $item['name'] = implode(', ', $options);
+
             }
+
+            if ($item['type'] == 'string') {
+                $schemaFields .= "\$table->string('" . $item['name'] . "')";
+            } elseif ($item['type'] == 'text') {
+                $schemaFields .= "\$table->text('" . $item['name'] . "')";
+            } elseif ($item['type'] == 'integer') {
+                $schemaFields .= "\$table->integer('" . $item['name'] . "')";
+            } elseif ($item['type'] == 'date') {
+                $schemaFields .= "\$table->date('" . $item['name'] . "')";
+            } elseif ($item['type'] == 'double') {
+                $schemaFields .= "\$table->double('" . $item['name'] . "')";
+            } else {
+                $schemaFields .= "\$table->string('" . $item['name'] . "')";
+            }
+
+            /*
+             * Add extra field configuration options
+             * Format array
+             */
+            if ($item['config']) {
+
+                $options = array();
+
+                if (substr($item['config'], 0, 1) == '|') {
+                    $options = explode('|', $item['config']);
+                    unset($options[0]);
+                    array_pop($options);
+                }
+
+                foreach ($options as $config) {
+
+                    switch (substr($config, 0, 7)) {
+                        case 'nullabl':
+
+                            $schemaFields .= '->nullable()';
+                            break;
+
+                        case 'default':
+
+                            $value = explode('%%', $config);
+                            $schemaFields .= '->default(' . $value[1] . ')';
+                            break;
+
+                        case 'unsigne':
+
+                            $schemaFields .= '->unsigned()';
+                            break;
+                    }
+                }
+            }
+
+            if (!empty($schemaFields)) {
+                $schemaFields .= ';';
+            }
+
         }
 
         $schemaUp = "
