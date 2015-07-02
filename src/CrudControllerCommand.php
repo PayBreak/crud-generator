@@ -62,9 +62,9 @@ class CrudControllerCommand extends GeneratorCommand
 
         $crudName = strtolower($this->option('crud-name'));
         $crudNameCap = ucwords($crudName);
-        $crudNamePlural = str_plural($crudName);
-        $crudNamePluralCap = str_plural($crudNameCap);
-        $crudNameSingular = str_singular($crudName);
+        $crudNamePlural = $crudName;
+        $crudNamePluralCap = $crudNameCap;
+        $crudNameSingular = $crudName;
 
         return $this->replaceNamespace($stub, $name)->replaceCrudName($stub, $crudName)->replaceCrudNameCap($stub, $crudNameCap)->replaceCrudNamePlural($stub, $crudNamePlural)->replaceCrudNamePluralCap($stub, $crudNamePluralCap)->replaceCrudNameSingular($stub, $crudNameSingular)->replaceClass($stub, $name);
     }
